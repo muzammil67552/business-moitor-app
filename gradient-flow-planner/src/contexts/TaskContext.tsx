@@ -35,6 +35,8 @@ interface TaskContextType {
   isAdModalOpen: boolean;
   showAdModal: (data: AdModalData) => void;
   closeAdModal: () => void;
+  isInlineAdDismissed: boolean;
+  dismissInlineAd: () => void;
 }
 
 const TaskContext = createContext<TaskContextType | undefined>(undefined);
@@ -46,6 +48,7 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
   });
   const [alarmTask, setAlarmTask] = useState<Task | null>(null);
   const [adModalData, setAdModalData] = useState<AdModalData | null>(null);
+  const [isInlineAdDismissed, setIsInlineAdDismissed] = useState(false);
   const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
   const [isAlarmRinging, setIsAlarmRinging] = useState(false);
 
@@ -199,6 +202,10 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
     setAdModalData(null);
   };
 
+  const dismissInlineAd = () => {
+    setIsInlineAdDismissed(true);
+  };
+
   return (
     <TaskContext.Provider
       value={{
@@ -213,6 +220,8 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
         isAdModalOpen: !!adModalData,
         showAdModal,
         closeAdModal,
+        isInlineAdDismissed,
+        dismissInlineAd,
       }}
     >
       {children}
