@@ -21,6 +21,7 @@ export interface AdModalData {
   title: string;
   subtitle: string;
   actionType: "added" | "completed" | "alarm";
+  autoCloseSeconds?: number;
 }
 
 interface TaskContextType {

@@ -15,6 +15,7 @@ const AlarmModal = () => {
         title: "Task Confirmed & Done! 🎉",
         subtitle: `You completed "${taskTitle}". Great job!`,
         actionType: "alarm",
+        autoCloseSeconds: 5,
       });
     }
   };
@@ -27,6 +28,7 @@ const AlarmModal = () => {
         title: "Task Alert Confirmed 👍",
         subtitle: `You acknowledged the alert for "${taskTitle}".`,
         actionType: "alarm",
+        autoCloseSeconds: 5,
       });
     } else {
       dismissAlarm();

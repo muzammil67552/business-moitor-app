@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Clock, Bell, Sparkles } from "lucide-react";
@@ -6,6 +7,38 @@ import NativeAdBanner from "./NativeAdBanner";
 
 export const TaskActionAdModal = () => {
   const { adModalData, isAdModalOpen, closeAdModal } = useTasks();
+  const [timeLeft, setTimeLeft] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!isAdModalOpen || !adModalData) {
+      setTimeLeft(null);
+      return;
+    }
+
+    // Default to 5 seconds for alarm actions or any modal with explicit autoCloseSeconds
+    const duration = adModalData.autoCloseSeconds ?? (adModalData.actionType === "alarm" ? 5 : null);
+    if (!duration) {
+      setTimeLeft(null);
+      return;
+    }
+
+    setTimeLeft(duration);
+
+    const interval = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev === null || prev <= 1) {
+          clearInterval(interval);
+          closeAdModal();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, [isAdModalOpen, adModalData, closeAdModal]);
 
   if (!adModalData) return null;
 
@@ -53,16 +86,36 @@ export const TaskActionAdModal = () => {
 
         {/* Official Adsterra Native Banner inside the modal */}
         <div className="mt-3 mb-2">
-          <NativeAdBanner isModalAd={true} label="Sponsored" />
+          <NativeAdBanner
+            isModalAd={true}
+            label="Sponsored"
+            dismissible={true}
+            onDismiss={closeAdModal}
+          />
         </div>
+
+        {/* 5-second countdown indicator */}
+        {timeLeft !== null && (
+          <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground py-0.5">
+            <Clock className="w-3.5 h-3.5 text-primary animate-pulse" />
+            <span>
+              Ad will automatically close in <strong className="text-foreground font-semibold">{timeLeft}s</strong>
+            </span>
+          </div>
+        )}
 
         {/* Action Button */}
         <div className="pt-2">
           <Button
             onClick={closeAdModal}
-            className="w-full gradient-primary text-white font-semibold py-2.5 rounded-xl shadow-card hover:opacity-95 animate-press"
+            className="w-full gradient-primary text-white font-semibold py-2.5 rounded-xl shadow-card hover:opacity-95 animate-press flex items-center justify-center gap-2"
           >
-            Continue
+            <span>Continue</span>
+            {timeLeft !== null && (
+              <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full font-mono">
+                {timeLeft}s
+              </span>
+            )}
           </Button>
         </div>
       </DialogContent>
