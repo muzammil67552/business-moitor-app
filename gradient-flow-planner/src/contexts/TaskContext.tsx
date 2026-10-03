@@ -22,6 +22,7 @@ export interface AdModalData {
   subtitle: string;
   actionType: "added" | "completed" | "alarm";
   autoCloseSeconds?: number;
+  redirectTo?: string;
 }
 
 interface TaskContextType {

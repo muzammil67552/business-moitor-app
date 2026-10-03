@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Clock, Bell, Sparkles } from "lucide-react";
@@ -8,6 +9,19 @@ import NativeAdBanner from "./NativeAdBanner";
 export const TaskActionAdModal = () => {
   const { adModalData, isAdModalOpen, closeAdModal } = useTasks();
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
+  const navigate = useNavigate();
+
+  const adModalDataRef = useRef(adModalData);
+  adModalDataRef.current = adModalData;
+
+  const handleClose = () => {
+    const currentData = adModalDataRef.current;
+    const redirectPath = currentData?.redirectTo || (currentData?.actionType === "added" ? "/" : null);
+    closeAdModal();
+    if (redirectPath) {
+      navigate(redirectPath);
+    }
+  };
 
   useEffect(() => {
     if (!isAdModalOpen || !adModalData) {
@@ -15,8 +29,8 @@ export const TaskActionAdModal = () => {
       return;
     }
 
-    // Default to 5 seconds for alarm actions or any modal with explicit autoCloseSeconds
-    const duration = adModalData.autoCloseSeconds ?? (adModalData.actionType === "alarm" ? 5 : null);
+    // Default: 3 seconds for added tasks, 5 seconds for alarm actions, or explicit autoCloseSeconds
+    const duration = adModalData.autoCloseSeconds ?? (adModalData.actionType === "added" ? 3 : adModalData.actionType === "alarm" ? 5 : null);
     if (!duration) {
       setTimeLeft(null);
       return;
@@ -28,7 +42,7 @@ export const TaskActionAdModal = () => {
       setTimeLeft((prev) => {
         if (prev === null || prev <= 1) {
           clearInterval(interval);
-          closeAdModal();
+          handleClose();
           return 0;
         }
         return prev - 1;
@@ -38,7 +52,7 @@ export const TaskActionAdModal = () => {
     return () => {
       clearInterval(interval);
     };
-  }, [isAdModalOpen, adModalData, closeAdModal]);
+  }, [isAdModalOpen, adModalData]);
 
   if (!adModalData) return null;
 
@@ -72,7 +86,7 @@ export const TaskActionAdModal = () => {
   };
 
   return (
-    <Dialog open={isAdModalOpen} onOpenChange={(open) => !open && closeAdModal()}>
+    <Dialog open={isAdModalOpen} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent className="max-w-md w-[92vw] sm:w-full rounded-3xl p-6 bg-card border border-border shadow-elevated">
         <DialogHeader className="flex flex-col items-center text-center">
           {getIcon()}
@@ -90,16 +104,20 @@ export const TaskActionAdModal = () => {
             isModalAd={true}
             label="Sponsored"
             dismissible={true}
-            onDismiss={closeAdModal}
+            onDismiss={handleClose}
           />
         </div>
 
-        {/* 5-second countdown indicator */}
+        {/* Countdown indicator */}
         {timeLeft !== null && (
           <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground py-0.5">
             <Clock className="w-3.5 h-3.5 text-primary animate-pulse" />
             <span>
-              Ad will automatically close in <strong className="text-foreground font-semibold">{timeLeft}s</strong>
+              {adModalData.actionType === "added" ? (
+                <>Redirecting to Home in <strong className="text-foreground font-semibold">{timeLeft}s</strong></>
+              ) : (
+                <>Ad will automatically close in <strong className="text-foreground font-semibold">{timeLeft}s</strong></>
+              )}
             </span>
           </div>
         )}
@@ -107,10 +125,10 @@ export const TaskActionAdModal = () => {
         {/* Action Button */}
         <div className="pt-2">
           <Button
-            onClick={closeAdModal}
+            onClick={handleClose}
             className="w-full gradient-primary text-white font-semibold py-2.5 rounded-xl shadow-card hover:opacity-95 animate-press flex items-center justify-center gap-2"
           >
-            <span>Continue</span>
+            <span>{adModalData.actionType === "added" ? "Go to Home" : "Continue"}</span>
             {timeLeft !== null && (
               <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full font-mono">
                 {timeLeft}s

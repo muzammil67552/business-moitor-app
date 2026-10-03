@@ -67,6 +67,8 @@ const AddTaskDialog = ({ open, onOpenChange, defaultDate }: AddTaskDialogProps) 
       title: "Task Scheduled! ⏰",
       subtitle: `Your reminder for "${scheduledTitle}" is set for ${scheduledTime}.`,
       actionType: "added",
+      autoCloseSeconds: 3,
+      redirectTo: "/",
     });
   };
 
